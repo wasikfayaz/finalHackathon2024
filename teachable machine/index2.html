@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Blog - Image Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #8b5e5e;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        header {
+            background-color: #f50303;
+            color: #fff;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .button-container {
+            margin: 20px 0;
+        }
+
+        .button-container button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .button-container button:hover {
+            background-color: #0056b3;
+        }
+
+        #webcam-container {
+            margin: 20px 0;
+        }
+
+        #label-container div {
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>AI Blog - Image Recognition</h1>
+    </header>
+    <main>
+        <div class="content">
+            <h2>Exploring Image Recognition with AI</h2>
+            <p>Welcome to our AI blog! Today, we're diving into the fascinating world of image recognition. This
+                technology allows computers to identify and process images just like the human brain does. Below, you
+                can test out an image recognition model yourself by clicking the "Start" button and seeing the results
+                in real-time using your webcam.</p>
+
+            <div class="button-container">
+                <button type="button" onclick="init()">Start</button>
+            </div>
+
+            <div id="webcam-container"></div>
+            <div id="label-container"></div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "https://teachablemachine.withgoogle.com/models/pUSRNc2MA/";
+
+        let model, webcam, labelContainer, maxPredictions;
+
+        // Load the image model and setup the webcam
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            // load the model and metadata
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            // Convenience function to setup a webcam
+            const flip = true; // whether to flip the webcam
+            webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            // append elements to the DOM
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+        }
+
+        async function loop() {
+            webcam.update(); // update the webcam frame
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        // run the webcam image through the image model
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+            }
+        }
+    </script>
+</body>
+
+</html>
