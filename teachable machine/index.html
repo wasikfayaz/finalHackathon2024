@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Teachable Machine</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <h1>Google Teachable Machine</h1>
+        <p>Empower your creativity with machine learning</p>
+    </header>
+    <main>
+        <section class="intro box">
+            <h2>What is Teachable Machine?</h2>
+            <p>
+                Google Teachable Machine is a web-based tool that makes creating machine learning models fast, easy, and
+                accessible to everyone. It allows you to train models to recognize your own images, sounds, and poses
+                without needing any coding skills.
+                Here is the test model which tells you DOG , CAT & Bird.
+            </p>
+            <div>Teachable Machine Image Model of Which tell you about CAT, DOG And Bird</div>
+            <button type="button" onclick="init()">Start</button>
+            <div id="webcam-container"></div>
+            <div id="label-container"></div>
+            <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+            <script
+                src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+            <script type="text/javascript">
+                // More API functions here:
+                // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+                // the link to your model provided by Teachable Machine export panel
+                const URL = "https://teachablemachine.withgoogle.com/models/pUSRNc2MA/";
+
+                let model, webcam, labelContainer, maxPredictions;
+
+                // Load the image model and setup the webcam
+                async function init() {
+                    const modelURL = URL + "model.json";
+                    const metadataURL = URL + "metadata.json";
+
+                    // load the model and metadata
+                    // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+                    // or files from your local hard drive
+                    // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+                    model = await tmImage.load(modelURL, metadataURL);
+                    maxPredictions = model.getTotalClasses();
+
+                    // Convenience function to setup a webcam
+                    const flip = true; // whether to flip the webcam
+                    webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+                    await webcam.setup(); // request access to the webcam
+                    await webcam.play();
+                    window.requestAnimationFrame(loop);
+
+                    // append elements to the DOM
+                    document.getElementById("webcam-container").appendChild(webcam.canvas);
+                    labelContainer = document.getElementById("label-container");
+                    for (let i = 0; i < maxPredictions; i++) { // and class labels
+                        labelContainer.appendChild(document.createElement("div"));
+                    }
+                }
+
+                async function loop() {
+                    webcam.update(); // update the webcam frame
+                    await predict();
+                    window.requestAnimationFrame(loop);
+                }
+
+                // run the webcam image through the image model
+                async function predict() {
+                    // predict can take in an image, video or canvas html element
+                    const prediction = await model.predict(webcam.canvas);
+                    for (let i = 0; i < maxPredictions; i++) {
+                        const classPrediction =
+                            prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                        labelContainer.childNodes[i].innerHTML = classPrediction;
+                    }
+                }
+            </script>
+        </section>
+        <section class="features box">
+            <h2>Features</h2>
+            <ul>
+                <li>Intuitive and user-friendly interface</li>
+                <li>No coding required</li>
+                <li>Train models with your own data</li>
+                <li>Export models to use in your own projects</li>
+                <li>Free to use</li>
+            </ul>
+        </section>
+        <section class="use-cases box">
+            <h2>Use Cases</h2>
+            <p>
+                Teachable Machine can be used in a variety of scenarios including:
+            </p>
+            <ul>
+                <li>Educational projects</li>
+                <li>Prototyping new ideas</li>
+                <li>Interactive art installations</li>
+                <li>Creating custom AI applications</li>
+            </ul>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Google Teachable Machine. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>
